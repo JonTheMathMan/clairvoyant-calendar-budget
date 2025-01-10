@@ -1,58 +1,88 @@
 module IsDateInDateRangeTest
     ( 
-    --     getMonthLengthTestResult,
-    -- addMonthTestResult,
-    -- addDayTestResult
-        dailyfakeloop,
-        monthlyfakeloop
+        getRepeatedDaysTestResult,
+        getRepeatedMonthsTestResult,
     ) where
 
 import Dates
+import IsDateInDateRange
 
--- // IsDateRepeatInDateRange :: (String, Int, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) -> (Bool, [(Int, Int, Int)])
--- // IsDateRepeatInDateRange (repeatType, multiplier, date, start, stop) = (true, datesFound)
+frth (_, _, _, x) = x
 
-baseDate :: (Int, Int, Int)
-baseDate = (2019, 07, 15)
+-- Test arguments for getRepeatedDays
+getRepeatedDaysTestArgs :: [(String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Int, (Bool, Int, [(Int, Int, Int)]))]
+getRepeatedDaysTestArgs = [
+    -- Event Date Before Search Window
+    ("beforeWindow1", (2023, 12, 1), (2023, 12, 10), (2023, 12, 20), 1, 
+        (True, 11, [(2023, 12, 10), (2023, 12, 11), (2023, 12, 12), (2023, 12, 13), (2023, 12, 14), (2023, 12, 15), 
+                    (2023, 12, 16), (2023, 12, 17), (2023, 12, 18), (2023, 12, 19), (2023, 12, 20)])),
+    ("beforeWindow3", (2023, 12, 1), (2023, 12, 10), (2023, 12, 20), 3, 
+        (True, 4, [(2023, 12, 10), (2023, 12, 13), (2023, 12, 16), (2023, 12, 19)])),
+    ("beforeWindow7", (2023, 12, 1), (2023, 12, 10), (2023, 12, 20), 7, 
+        (True, 1, [ (2023, 12, 15)])),
 
-dailyRepeatTypes :: [(String, Int)]
-dailyRepeatTypes = [
-    ("daily", 1),
-    ("weekly - every same day of the week", 7),
-    ("interval - every N days", 3),
-    ("interval - every N weeks", 21)]
+    -- Event Date During Search Window
+    ("duringWindow1", (2023, 12, 12), (2023, 12, 10), (2023, 12, 20), 1, 
+        (True, 9, [(2023, 12, 12), (2023, 12, 13), (2023, 12, 14), (2023, 12, 15), (2023, 12, 16), (2023, 12, 17), 
+                    (2023, 12, 18), (2023, 12, 19), (2023, 12, 20)])),
+    ("duringWindow3", (2023, 12, 12), (2023, 12, 10), (2023, 12, 20), 3, 
+        (True, 3, [(2023, 12, 12), (2023, 12, 15), (2023, 12, 18)])),
+    ("duringWindow7", (2023, 12, 12), (2023, 12, 10), (2023, 12, 20), 7, 
+        (True, 2, [(2023, 12, 12), (2023, 12, 19)])),
 
-monthlyRepeatTypes :: [(String, Int)]
-monthlyRepeatTypes = [
-    ("monthly - same day of the month", 1),
-    ("interval - every N Months on the same day of the month", 3)]
+    -- Event Date After Search Window
+    ("afterWindow1", (2023, 12, 25), (2023, 12, 10), (2023, 12, 20), 1, (False, 0, [])),
+    ("afterWindow3", (2023, 12, 25), (2023, 12, 10), (2023, 12, 20), 3, (False, 0, [])),
+    ("afterWindow7", (2023, 12, 25), (2023, 12, 10), (2023, 12, 20), 7, (False, 0, []))
+    ]
 
-windowTypes :: [(String, Int, Int, Bool)]
-windowTypes = [
-    ("after", 1, 2, True),
-    ("cover", -1, 1, True),
-    ("before", -2, -1, False),
-    ("sameDay", 0, 0, True),
-    ("start", 0, 1, True),
-    ("stop", -1, 0, True),
-    ("startStop", 0, 1, True)]
---     ("betweenDateAndFirstRepeat", )]
+-- Function to test a single test case
+getRepeatedDaysTestCaseCheck :: (String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Int, (Bool, Int, [(Int, Int, Int)]))
+                               -> (String, (Bool, Int, [(Int, Int, Int)]), (Bool, Int, [(Int, Int, Int)]), Bool)
+getRepeatedDaysTestCaseCheck (name, eventDate, windowStart, windowEnd, repeatInterval, expected) = 
+    (name, expected, getRepeatedDays eventDate windowStart windowEnd repeatInterval, getRepeatedDays eventDate windowStart windowEnd repeatInterval == expected)
 
-dailyfakeloop :: [(String, String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Bool)]
-dailyfakeloop = [(x, y, baseDate, addDay baseDate (interval * startMultiplier), addDay baseDate (interval * endMultiplier), expect)  | (x, startMultiplier, endMultiplier, expect) <- windowTypes, (y, interval) <- dailyRepeatTypes]
+getRepeatedDaysTestList :: [(String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Int, (Bool, Int, [(Int, Int, Int)]))] -> [(String, (Bool, Int, [(Int, Int, Int)]), (Bool, Int, [(Int, Int, Int)]), Bool)]
+getRepeatedDaysTestList xs = [x2 | x2 <- [getRepeatedDaysTestCaseCheck x | x <- xs], not(frth x2)]
 
-monthlyfakeloop :: [(String, String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Bool)]
-monthlyfakeloop = [(x, y, baseDate, addMonth baseDate (interval * startMultiplier), addMonth baseDate (interval * endMultiplier), expect)  | (x, startMultiplier, endMultiplier, expect) <- windowTypes, (y, interval) <- monthlyRepeatTypes]
+-- Run all test cases
+getRepeatedDaysTestResult :: [(String, (Bool, Int, [(Int, Int, Int)]), (Bool, Int, [(Int, Int, Int)]), Bool)]
+getRepeatedDaysTestResult = getRepeatedDaysTestList getRepeatedDaysTestArgs
 
+getRepeatedMonthsTestArgs :: [(String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Int, (Bool, Int, [(Int, Int, Int)]))]
+getRepeatedMonthsTestArgs = [
+    -- Event Date Before Search Window
+    ("beforeWindow1", (2023, 1, 1), (2023, 4, 1), (2023, 10, 1), 1, 
+        (True, 7, [(2023, 4, 1), (2023, 5, 1), (2023, 6, 1), (2023, 7, 1), (2023, 8, 1), (2023, 9, 1), (2023, 10, 1)])),
+    ("beforeWindow3", (2023, 1, 1), (2023, 4, 1), (2023, 10, 1), 3, 
+        (True, 3, [(2023, 4, 1), (2023, 7, 1), (2023, 10, 1)])),
+    ("beforeWindow6", (2023, 1, 1), (2023, 4, 1), (2023, 10, 1), 6, 
+        (True, 1, [(2023, 7, 1)])),
 
--- IsDateRepeatInDateRangeTestCaseTypes :: [(String, Int, (Int, Int, Int))] -> [String] -> [(String, Int, (Int, Int, Int), String)]
--- IsDateRepeatInDateRangeTestCaseTypes xs ys = [(repeatType, multiplier, date, windowType) | (repeatType, multiplier, date) <- xs, windowType <- ys] 
+    -- Event Date During Search Window
+    ("duringWindow1", (2023, 6, 1), (2023, 4, 1), (2023, 10, 1), 1, 
+        (True, 5, [(2023, 6, 1), (2023, 7, 1), (2023, 8, 1), (2023, 9, 1), (2023, 10, 1)])),
+    ("duringWindow3", (2023, 6, 1), (2023, 4, 1), (2023, 10, 1), 3, 
+        (True, 2, [(2023, 6, 1), (2023, 9, 1)])),
+    ("duringWindow6", (2023, 6, 1), (2023, 4, 1), (2023, 10, 1), 6, 
+        (True, 1, [(2023, 6, 1)])),
 
+    -- Event Date After Search Window
+    ("afterWindow1", (2023, 12, 1), (2023, 4, 1), (2023, 10, 1), 1, (False, 0, [])),
+    ("afterWindow3", (2023, 12, 1), (2023, 4, 1), (2023, 10, 1), 3, (False, 0, [])),
+    ("afterWindow6", (2023, 12, 1), (2023, 4, 1), (2023, 10, 1), 6, (False, 0, []))
+    ]
 
--- IsDateRepeatInDateRangeTestCaseCheck :: (String, (Int, Int, Int), Bool) -> (String, Int, Int, Bool)
--- IsDateRepeatInDateRangeTestCaseCheck (name, date, expected) = (name, expected, IsDateRepeatInDateRange date, (IsDateRepeatInDateRange date) == expected)
+-- Function to test a single test case
+getRepeatedMonthsTestCaseCheck :: (String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Int, (Bool, Int, [(Int, Int, Int)]))
+                               -> (String, (Bool, Int, [(Int, Int, Int)]), (Bool, Int, [(Int, Int, Int)]), Bool)
+getRepeatedMonthsTestCaseCheck (name, eventDate, windowStart, windowEnd, repeatInterval, expected) = 
+    (name, expected, getRepeatedMonths eventDate windowStart windowEnd repeatInterval, getRepeatedMonths eventDate windowStart windowEnd repeatInterval == expected)
 
--- IsDateRepeatInDateRangeTestList :: [(String, String, (Int, Int, Int), Int)] -> [(String, Int, Int, Bool)]
--- IsDateRepeatInDateRangeTestList xs = [x2 | x2 <- [IsDateRepeatInDateRangeTestCaseCheck x | x <- xs], frth x2 == False]
+getRepeatedMonthsTestList :: [(String, (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), Int, (Bool, Int, [(Int, Int, Int)]))] -> [(String, (Bool, Int, [(Int, Int, Int)]), (Bool, Int, [(Int, Int, Int)]), Bool)]
+getRepeatedMonthsTestList xs = [x2 | x2 <- [getRepeatedMonthsTestCaseCheck x | x <- xs], not(frth x2)]
 
--- IsDateRepeatInDateRangeTestResult = IsDateRepeatInDateRangeTestList IsDateRepeatInDateRangeTestArgs
+-- Run all test cases
+getRepeatedMonthsTestResult :: [(String, (Bool, Int, [(Int, Int, Int)]), (Bool, Int, [(Int, Int, Int)]), Bool)]
+getRepeatedMonthsTestResult = getRepeatedMonthsTestList getRepeatedMonthsTestArgs
+

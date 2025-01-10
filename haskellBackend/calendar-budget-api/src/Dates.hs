@@ -5,7 +5,8 @@ module Dates
         addDay,
         julianDate,
         julianDateInverse,
-        daysDiff
+        daysDiff,
+        monthsDiff
     ) where
 
 -- data CalendarDate = CalendarDate
@@ -46,7 +47,7 @@ addDay (year, month, day) nDays = if (nDays + day) > getMonthLength (year, month
 -- // IsDateRepeatInDateRange (repeatType, multiplier, date, start, stop) = (true, datesFound)
 
 midYears :: (Int, Int, Int) -> (Int, Int, Int) -> Int
-midYears (year, month, day) (year2, month2, day2) = sum [1 | x <- [year..year2], x `mod` 4 == 0] + (year2-year) * 365 
+midYears (year, month, day) (year2, month2, day2) = sum [1 | x <- [year..year2], x `mod` 4 == 0] + abs (year2-year) * 365 
 
 julianDate :: (Int, Int, Int) -> Int
 julianDate (year, month, day) = sum [getMonthLength (year, x, day) | x <- [1..month-1]] + day 
@@ -55,14 +56,17 @@ julianDateInverse :: (Int, Int, Int) -> Int
 julianDateInverse (year, month, day) = sum [getMonthLength (year, x, day) | x <- [month..12]] - day 
 
 daysDiff :: (Int, Int, Int) -> (Int, Int, Int) -> Int
-daysDiff (year, month, day) (year2, month2, day2) = if year2 - year > 1
-    then julianDateInverse (year, month, day) + midYears (year +1, month, day) (year2 -1, month2, day2) + julianDate (year2, month2, day2)
-    else if year2 - year == 1
-    then julianDateInverse (year, month, day) + julianDate (year2, month2, day2)
-    else julianDate (year2, month2, day2) - julianDate (year, month, day)
+daysDiff (year, month, day) (year2, month2, day2) 
+    | year2 - year > 3 = julianDateInverse (year, month, day) + midYears (year +1, month, day) (year2 -1, month2, day2) + julianDate (year2, month2, day2)
+    | year2 - year == 2 = julianDateInverse (year, month, day) + 365 + julianDate (year2, month2, day2)
+    | year2 - year == 1 = julianDateInverse (year, month, day) + julianDate (year2, month2, day2)
+    | year2 - year == 0 = julianDate (year2, month2, day2) - julianDate (year, month, day)
+    | year2 - year < -3  = 0 - julianDate (year, month, day) - midYears (year +1, month, day) (year2 -1, month2, day2) - julianDateInverse (year2, month2, day2)
+    | year2 - year == -2 = 0 - julianDate (year, month, day) - 365 - julianDateInverse (year2, month2, day2)
+    | year2 - year == -1 = 0 - julianDate(year, month, day) - julianDateInverse (year2, month2, day2) 
+    | otherwise = 0
 
--- chatGPT generated monthsDiff. TODO: make sure unit test for this is good and this passes
 monthsDiff :: (Int, Int, Int) -> (Int, Int, Int) -> Int
 monthsDiff (y1, m1, d1) (y2, m2, d2)
     | y2 > y1 || (y2 == y1 && m2 > m1) || (y2 == y1 && m2 == m1 && d2 >= d1) = (y2 - y1) * 12 + (m2 - m1)
-    | otherwise = (y2 - y1) * 12 + (m2 - m1) - 1
+    | otherwise = (y2 - y1) * 12 + (m2 - m1)

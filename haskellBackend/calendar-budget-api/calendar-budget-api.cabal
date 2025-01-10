@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d2c30e74708d6159a1a3a199e30ab749135f2f5cae5973ccf13e8bfa42dd6ce1
+-- hash: b10a45c9b236f639e460c293ae7d751601a36a88cd081854023418a2831f112b
 
 name:           calendar-budget-api
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Dates
+      IsDateInDateRange
       Lib
   other-modules:
       Paths_calendar_budget_api
@@ -55,6 +56,7 @@ test-suite calendar-budget-api-test
   other-modules:
       BasicTestExample
       DatesTest
+      IsDateInDateRangeTest
       Paths_calendar_budget_api
   hs-source-dirs:
       test

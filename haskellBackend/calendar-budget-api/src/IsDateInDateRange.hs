@@ -1,30 +1,49 @@
 module IsDateInDateRange
     ( 
         getRepeatedDays,
+        getRepeatedMonths,
     ) where
 
 import Dates
 
--- Todo: chatGPT gave this based on the javascript version, but it is not right. make it more like you want it.
--- Function to get repeated days based on the given parameters
-getRepeatedDays :: (Day, TimeOfDay, Day, Day, TimeOfDay) -> Integer -> Integer -> (Bool, Int, [Day])
-getRepeatedDays commonArgs missingIntervalValue repeatIntervalValue
-    | missingIntervalValue /= 0 = (False, 0, [])
-    | eventObTime <= startTime = 
-        let moduloStart = daysDiff (eventObDate, startDate) `mod` repeatIntervalValue
-            inverseModuloStart = repeatIntervalValue - moduloStart
-            moduloDiff = if moduloStart == 0 then daysDiff (startDate, endDate) else daysDiff (startDate, endDate) - inverseModuloStart
+getRepeatedDays :: (Int, Int, Int) -> (Int, Int, Int) -> (Int, Int, Int) -> Int -> (Bool, Int, [(Int, Int, Int)])
+getRepeatedDays eventDate windowStart windowEnd repeatIntervalInDays
+    | repeatIntervalInDays < 1 = (False, 0, [])
+    | (daysDiff windowStart eventDate) < 0 = 
+        let moduloStart = (daysDiff eventDate windowStart) `mod` repeatIntervalInDays
+            inverseModuloStart = repeatIntervalInDays - moduloStart
+            moduloDiff = if moduloStart == 0 then (daysDiff windowStart windowEnd) else (daysDiff windowStart windowEnd) - inverseModuloStart
         in if moduloDiff < 0
             then (False, 0, [])
-            else let occurrences = fromIntegral (moduloDiff `div` repeatIntervalValue) + 1
-                     firstOccurranceDate = if moduloStart == 0 then startDate else addDaysToDate startDate inverseModuloStart
-                     datesRepeated = take (fromIntegral occurrences) $ iterate (\date -> addDaysToDate date repeatIntervalValue) firstOccurranceDate
+            else let occurrences = fromIntegral (moduloDiff `div` repeatIntervalInDays) + 1
+                     firstOccurranceDate = if moduloStart == 0 then windowStart else addDay windowStart inverseModuloStart
+                     datesRepeated = take (fromIntegral occurrences) $ iterate (\date -> addDay date repeatIntervalInDays) firstOccurranceDate
                  in (True, occurrences, datesRepeated)
     | otherwise = 
-        let eventObDateDiff = daysDiff (startDate, endDate) - daysDiff (startDate, eventObDate)
-            occurrences = fromIntegral (eventObDateDiff `div` repeatIntervalValue) + 1
-            datesRepeated = take (fromIntegral occurrences) $ iterate (\date -> addDaysToDate date repeatIntervalValue) eventObDate
-        in (True, occurrences, datesRepeated)
+        let eventDateDiff = (daysDiff windowStart windowEnd) - (daysDiff windowStart eventDate)
+            occurrences = fromIntegral (eventDateDiff `div` repeatIntervalInDays) + 1
+            datesRepeated = take (fromIntegral occurrences) $ iterate (\date -> addDay date repeatIntervalInDays) eventDate
+        in if eventDateDiff < 1
+            then (False, 0, [])
+            else (True, occurrences, datesRepeated)
 
--- Sample usage:
--- getRepeatedDays (eventObDate, eventObTime, startDate, endDate, startTime) missingIntervalValue repeatIntervalValue
+getRepeatedMonths :: (Int, Int, Int) -> (Int, Int, Int) -> (Int, Int, Int) -> Int -> (Bool, Int, [(Int, Int, Int)])
+getRepeatedMonths eventDate windowStart windowEnd repeatIntervalInMonths
+    | repeatIntervalInMonths < 1 = (False, 0, [])
+    | (monthsDiff windowStart eventDate) < 0 =
+        let moduloStart = (monthsDiff eventDate windowStart) `mod` repeatIntervalInMonths
+            inverseModuloStart = repeatIntervalInMonths - moduloStart
+            moduloDiff = if moduloStart == 0 then (monthsDiff windowStart windowEnd) else (monthsDiff windowStart windowEnd) - inverseModuloStart
+        in if moduloDiff < 0
+            then (False, 0, [])
+            else let occurrences = fromIntegral (moduloDiff `div` repeatIntervalInMonths) + 1
+                     firstOccurranceDate = if moduloStart == 0 then windowStart else addMonth windowStart inverseModuloStart
+                     datesRepeated = take (fromIntegral occurrences) $ iterate (\date -> addMonth date repeatIntervalInMonths) firstOccurranceDate
+                 in (True, occurrences, datesRepeated)
+    | otherwise =
+        let eventDateDiff = (monthsDiff windowStart windowEnd) - (monthsDiff windowStart eventDate)
+            occurrences = fromIntegral (eventDateDiff `div` repeatIntervalInMonths) + 1
+            datesRepeated = take (fromIntegral occurrences) $ iterate (\date -> addMonth date repeatIntervalInMonths) eventDate
+        in if eventDateDiff < 1
+            then (False, 0, [])
+            else (True, occurrences, datesRepeated)

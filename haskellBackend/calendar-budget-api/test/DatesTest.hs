@@ -2,7 +2,8 @@ module DatesTest
     ( getMonthLengthTestResult,
     addMonthTestResult,
     addDayTestResult,
-    daysDiffTestResult
+    daysDiffTestResult,
+    monthsDiffTestResult
     ) where
 
 import Dates
@@ -96,7 +97,6 @@ daysDiffTestList xs = [x2 | x2 <- [daysDiffTestCaseCheck x | x <- xs], not(frth 
 
 daysDiffTestResult = daysDiffTestList daysDiffTestArgs
 
--- chatGPT generated monthDiff. TODO: verify this is a good unit test.
 monthsDiffTestArgs :: [(String, (Int, Int, Int), (Int, Int, Int), Int)]
 monthsDiffTestArgs = [
     ("sameMonth", (2020, 05, 15), (2020, 05, 29), 0),
