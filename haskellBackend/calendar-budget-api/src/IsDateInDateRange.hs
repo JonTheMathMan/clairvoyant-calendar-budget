@@ -2,6 +2,7 @@ module IsDateInDateRange
     ( 
         getRepeatedDays,
         getRepeatedMonths,
+        isDateInGivenRange,
     ) where
 
 import Dates
@@ -47,3 +48,28 @@ getRepeatedMonths eventDate windowStart windowEnd repeatIntervalInMonths
         in if eventDateDiff < 1
             then (False, 0, [])
             else (True, occurrences, datesRepeated)
+
+isDateInGivenRange :: (Int, Int, Int) -> (Int, Int, Int) -> (Int, Int, Int) -> Int -> String -> (Bool, Int, [(Int, Int, Int)])
+isDateInGivenRange eventDate windowStart windowEnd repeatInterval repeatType =
+    case repeatType of
+        "daily" ->
+            getRepeatedDays eventDate windowStart windowEnd 1
+
+        "weekly - every same day of the week" ->
+            getRepeatedDays eventDate windowStart windowEnd 7
+
+        "monthly - same day of the month" ->
+            getRepeatedMonths eventDate windowStart windowEnd 1
+
+        "interval - every N days" ->
+            getRepeatedDays eventDate windowStart windowEnd repeatInterval
+
+        "interval - every N weeks" ->
+            getRepeatedDays eventDate windowStart windowEnd (repeatInterval * 7)
+
+        "interval - every N Months on the same day of the month" ->
+            getRepeatedMonths eventDate windowStart windowEnd repeatInterval
+
+        _ -> (False, 0, [])  -- default case for unknown repeatType
+
+
